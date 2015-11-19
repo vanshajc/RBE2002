@@ -1,3 +1,6 @@
+#ifndef pins_h
+#define pins_h
+
 #define leftMotor1 10
 #define rightMotor1 9
 
@@ -21,3 +24,4 @@
 
 
 
+#endif
