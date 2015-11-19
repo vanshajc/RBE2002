@@ -5,7 +5,6 @@
 #include "pins.h"
 #include <Encoder.h>
 #include <PID_v1.h>
-
 #include "LiquidCrystal.h"
 #include <Servo.h>
 
@@ -16,6 +15,10 @@ int initialDifference = 0;
 
 Encoder le(leftEncoder1, leftEncoder2);
 Encoder re(rightEncoder1, rightEncoder2);
+
+double IRinput, IRoutput, IRsetpoint;
+double kP, kI, kD;
+PID IRPID(&IRinput, &IRoutput, &IRsetpoint, kP, kI, kD, DIRECT);
 
 Servo servo;
 
@@ -29,6 +32,8 @@ void setup() {
   servo.attach(servoPin);
   pinMode(stopPin, INPUT_PULLUP);
 
+  IRsetpoint = 400;
+  IRPID.SetMode(AUTOMATIC);
 }
 
 void loop() {
@@ -50,7 +55,9 @@ void loop() {
 
 void followWall(){
   double val = analogRead(frontIR) - thresh; // read ir value
-  driveArcade(1, val*0.01);
+  IRinput = analogRead(frontIR);
+  IRPID.Compute();
+  driveArcade(1, IRoutput);
 }
 
 void forward(){
