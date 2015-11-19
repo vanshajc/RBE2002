@@ -4,20 +4,20 @@
 //change from Morgan
 #include "pins.h"
 #include <Encoder.h>
-#include <PID_v1.h>
+#include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
 
 
 
-int thresh = 400;
+int thresh = 450;
 int initialDifference = 0;
 
 Encoder le(leftEncoder1, leftEncoder2);
 Encoder re(rightEncoder1, rightEncoder2);
 
 double IRinput, IRoutput, IRsetpoint;
-double kP = 0.01, kI= 0, kD = 0;
+double kP = 0.01, kI= 0, kD = 0.000;
 PID IRPID(&IRinput, &IRoutput, &IRsetpoint, kP, kI, kD, DIRECT);
 
 Servo servo;
@@ -28,25 +28,24 @@ LiquidCrystal lcd(40, 41, 42, 43, 44, 45);
 void setup() {
   initialDifference = le.read() + re.read();
   Serial.begin(9600);
+  lcd.begin(16, 2);
   lcd.setCursor(0, 0);
   servo.attach(servoPin);
   pinMode(stopPin, INPUT_PULLUP);
 
-  IRsetpoint = 400;
+  IRsetpoint = 800;
   IRPID.SetMode(AUTOMATIC);
 }
 
 void loop() {
   if (digitalRead(stopPin) == LOW)
     kill();
-  Serial.print("Left encoder: ");
-  Serial.print(le.read());
-  Serial.print(" Right encoder: ");
-  Serial.println(re.read());
-  Serial.print("IR Value: ");
-  Serial.println(analogRead(frontIR));
-  lcd.setCursor(0, 0);
-  lcd.print(analogRead(frontIR));
+//  Serial.print("Left encoder: ");
+//  Serial.print(le.read());
+//  Serial.print(" Right encoder: ");
+//  Serial.println(re.read());
+//  Serial.print("IR Value: ");
+//  Serial.println(analogRead(frontIR));
   followWall();
 
   //sweep();
@@ -57,7 +56,15 @@ void followWall(){
   double val = analogRead(frontIR) - thresh; // read ir value
   IRinput = analogRead(frontIR);
   IRPID.Compute();
-  driveArcade(1, IRoutput);
+  lcd.setCursor(0,0);
+  lcd.print(IRoutput);
+  lcd.setCursor(0, 1);
+  lcd.print(val*0.01);     
+  
+  Serial.println(IRoutput);
+  Serial.print("My value: ");
+  Serial.println(val*0.01);
+  driveArcade(1, val*0.01);
 }
 
 void forward(){
