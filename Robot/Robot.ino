@@ -6,12 +6,18 @@
 #include <Encoder.h>
 #include <PID_v1.h>
 
+#include "LiquidCrystal.h"
+#include <Servo.h>
 
 
+
+int thresh = 400;
 int initialDifference = 0;
 
 Encoder le(leftEncoder1, leftEncoder2);
 Encoder re(rightEncoder1, rightEncoder2);
+
+Servo servo;
 
 LiquidCrystal lcd(40, 41, 42, 43, 44, 45);
 
@@ -20,23 +26,32 @@ void setup() {
   initialDifference = le.read() + re.read();
   Serial.begin(9600);
   lcd.setCursor(0, 0);
-  digitalWrite(leftMotor1, 0);
-  digitalWrite(leftMotor2, 0);
-  digitalWrite(rightMotor1, 0);
-  digitalWrite(rightMotor2, 0);
+  servo.attach(servoPin);
+  pinMode(stopPin, INPUT_PULLUP);
 
 }
 
 void loop() {
-  //drive(255, 255);
+  if (digitalRead(stopPin) == LOW)
+    kill();
   Serial.print("Left encoder: ");
   Serial.print(le.read());
   Serial.print(" Right encoder: ");
   Serial.println(re.read());
-  forward();
+  Serial.print("IR Value: ");
+  Serial.println(analogRead(frontIR));
+  lcd.setCursor(0, 0);
+  lcd.print(analogRead(frontIR));
+  followWall();
+
+  //sweep();
 }
 
 
+void followWall(){
+  double val = analogRead(frontIR) - thresh; // read ir value
+  driveArcade(1, val*0.01);
+}
 
 void forward(){
   double turnRate = (le.read() + re.read() - initialDifference)*0.015;
@@ -49,8 +64,8 @@ void forward(){
 * @param turnRate the rate for which the robot needs to turn (-1 to 1)
 */
 void driveArcade(double forwardSpeed, double turnRate){
-  int leftSpeed = 128*forwardSpeed - 128*turnRate;
-  int rightSpeed = 128*forwardSpeed + 128*turnRate;
+  int leftSpeed = 255*forwardSpeed - 255*turnRate;
+  int rightSpeed = 255*forwardSpeed + 255*turnRate;
   drive(leftSpeed, rightSpeed);
 }
 
@@ -77,4 +92,19 @@ void drive(int left, int right){
     analogWrite(rightMotor1, right);
     analogWrite(rightMotor2, 0);
   }
+}
+
+void kill(){
+ drive(0, 0);
+ exit(0);
+}
+
+void sweep(){
+//  for (int i = 90; i<180; i+=10){
+//    servo.write(i);
+//    analogWrite(fan, 255);
+//    delay(100);
+//  }
+
+servo.write(0);
 }

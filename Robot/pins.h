@@ -32,6 +32,11 @@ enum AnalogInputs {
   kBackIR = 3,
 };
 
+#define stopPin 24
+#define servoPin 4
+#define fan 5
+
+
 
 
 #endif
