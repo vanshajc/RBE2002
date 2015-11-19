@@ -11,5 +11,13 @@
 #define rightEncoder2 20
 
 
+#define frontIR 3
+#define backIR 2
+
+#define stopPin 24
+#define servoPin 4
+#define fan 5
+
+
 
 
