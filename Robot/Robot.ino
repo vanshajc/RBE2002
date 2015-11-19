@@ -17,7 +17,7 @@ Encoder le(leftEncoder1, leftEncoder2);
 Encoder re(rightEncoder1, rightEncoder2);
 
 double IRinput, IRoutput, IRsetpoint;
-double kP, kI, kD;
+double kP = 0.01, kI= 0, kD = 0;
 PID IRPID(&IRinput, &IRoutput, &IRsetpoint, kP, kI, kD, DIRECT);
 
 Servo servo;
