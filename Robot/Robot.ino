@@ -1,9 +1,11 @@
 // Robot.ino
-// This is the main file. 
+// This is the main file.
 // Van is amazing
 //change from Morgan
 #include "pins.h"
 #include <Encoder.h>
+#include <PID_v1.h>
+
 
 
 int initialDifference = 0;
@@ -76,4 +78,3 @@ void drive(int left, int right){
     analogWrite(rightMotor2, 0);
   }
 }
-
