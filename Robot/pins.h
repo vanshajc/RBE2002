@@ -13,8 +13,9 @@
 #define rightEncoder1 19
 #define rightEncoder2 20
 
-#define frontIR 3
+#define frontRightIR 3
 #define backIR 2
+#define frontIR 2
 
 enum DigitalInputs {
   kLeftMotorA = 10,
