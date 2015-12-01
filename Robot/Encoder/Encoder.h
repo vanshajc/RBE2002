@@ -64,6 +64,8 @@ typedef struct {
 	int32_t                position;
 } Encoder_internal_state_t;
 
+double kConversionFactor = 0.001963495408494;
+
 class Encoder
 {
 public:
@@ -223,6 +225,10 @@ public:
 	inline int32_t read() {
 		update(&encoder);
 		return encoder.position;
+	}
+	inline double getInches() {
+		update(&encoder);
+		return encoder.position*kConversionFactor;
 	}
 	inline void write(int32_t p) {
 		encoder.position = p;
