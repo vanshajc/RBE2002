@@ -232,6 +232,7 @@ public:
 	inline double getInches() {
 		update(&encoder);
 		return encoder.position*kConversionFactor;
+		//test
 	}
 #endif
 private:
