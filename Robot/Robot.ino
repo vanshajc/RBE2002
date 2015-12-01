@@ -9,6 +9,8 @@
 #include <Servo.h>
 
 
+Point current;
+Point prev;
 
 int thresh = 450;
 int initialDifference = 0;
@@ -35,6 +37,10 @@ void setup() {
 
   IRsetpoint = 800;
   IRPID.SetMode(AUTOMATIC);
+  
+  
+  prev.x = 0;
+  prev.y = 0;
 }
 
 void loop() {
@@ -46,19 +52,54 @@ void loop() {
 //  Serial.println(re.read());
 //  Serial.print("IR Value: ");
 //  Serial.println(analogRead(frontIR));
+  updateCoordinates();
+  if (millis() % 100 == 0)
+    displayCoordinates();
   followWall();
 
   //sweep();
 }
 
+Point getDistanceTraveled(){
+  Point p;
+  double n = ((le.read() - prev.x) - (re.read() - prev.y))/(720*4.5) * 2.75 * 3.14;
+  // incorporate angle here
+  p.x = n;
+  p.y = 0;
+  prev.x = le.read();
+  prev.y = re.read();
+ return p; 
+}
+
+void updateCoordinates(){
+  Point p = getDistanceTraveled();
+  current.x += p.x;
+  current.y += p.y;
+}
+
+void displayCoordinates(){
+  lcd.setCursor(0, 0);
+  char s[16];
+  Serial.println(current.x);
+  Serial.println(current.y);
+  Serial.println("-----");
+  sprintf(s, "X = %d, Y = %d", current.x, current.y);
+  
+  lcd.print("X = ");
+  lcd.print(current.x);
+  lcd.setCursor(0, 1);
+  lcd.print("Y = ");
+  lcd.print(current.y);
+  
+  Serial.println(s);
+  //lcd.print(s);
+}
 
 void followWall(){
   double val = analogRead(frontRightIR) - thresh; // read ir value
   
   double val2 = analogRead(frontIR) - thresh;
-  Serial.println(val2);
-  lcd.setCursor(0,1);
-  lcd.print(val2);
+  //Serial.println(val2);
   if (val2 > -280){
 
    
@@ -80,7 +121,7 @@ void followWall(){
 //  Serial.println(IRoutput);
 //  Serial.print("My value: ");
 //  Serial.println(val*0.01);
-  driveArcade(0.35, val*0.0005);
+  driveArcade(0.35, val*0.001);
   
   
   

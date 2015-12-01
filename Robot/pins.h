@@ -17,6 +17,13 @@
 #define backIR 2
 #define frontIR 2
 
+
+typedef struct {
+ double x;
+ double y;
+} Point;
+
+
 enum DigitalInputs {
   kLeftMotorA = 10,
   kLeftMotorB = 11,
