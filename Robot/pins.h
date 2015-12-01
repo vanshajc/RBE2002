@@ -1,11 +1,11 @@
 #ifndef pins_h
 #define pins_h
 
-#define leftMotor1 10
-#define rightMotor1 9
+#define leftMotor1 8
+#define rightMotor1 11
 
-#define leftMotor2 11
-#define rightMotor2 8
+#define leftMotor2 9
+#define rightMotor2 10
 
 
 #define leftEncoder1 2

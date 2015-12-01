@@ -87,9 +87,9 @@ void displayCoordinates(){
   
   lcd.print("X = ");
   lcd.print(current.x);
-  lcd.setCursor(0, 1);
-  lcd.print("Y = ");
-  lcd.print(current.y);
+  //lcd.setCursor(0, 1);
+  //lcd.print("Y = ");
+  //lcd.print(current.y);
   
   Serial.println(s);
   //lcd.print(s);
@@ -100,14 +100,12 @@ void followWall(){
   
   double val2 = analogRead(frontIR) - thresh;
   //Serial.println(val2);
-  if (val2 > -280){
-
-   
-   drive(-128, 128);
-   delay(500); 
-   drive(0, 0);
-   
-  }
+//  if (val2 > -280){
+//  drive(-128, 128);
+//  delay(500); 
+//  drive(0, 0);
+//   
+//  }
   
   IRinput = analogRead(frontRightIR);
   IRPID.Compute();
@@ -115,13 +113,13 @@ void followWall(){
   
 //  lcd.setCursor(0,0);
 //  lcd.print(IRoutput);
-//  lcd.setCursor(0, 1);
-//  lcd.print(val*0.01);     
+    lcd.setCursor(0, 1);
+    lcd.print(val);     
 //  
 //  Serial.println(IRoutput);
 //  Serial.print("My value: ");
 //  Serial.println(val*0.01);
-  driveArcade(0.35, val*0.001);
+  driveArcade(0.35, val*0.005);
   
   
   
