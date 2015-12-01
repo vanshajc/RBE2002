@@ -7,6 +7,7 @@
 #include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
+#include "math.h"
 
 
 
@@ -54,40 +55,33 @@ void loop() {
 
 void followWall(){
   double val = analogRead(frontRightIR) - thresh; // read ir value
-  
+
   double val2 = analogRead(frontIR) - thresh;
   Serial.println(val2);
   lcd.setCursor(0,1);
   lcd.print(val2);
   if (val2 > -280){
 
-   
+
    drive(-128, 128);
-   delay(500); 
+   delay(500);
    drive(0, 0);
-   
+
   }
-  
+
   IRinput = analogRead(frontRightIR);
   IRPID.Compute();
   //driveArcade(0.5, IRoutput);
-  
+
 //  lcd.setCursor(0,0);
 //  lcd.print(IRoutput);
 //  lcd.setCursor(0, 1);
-//  lcd.print(val*0.01);     
-//  
+//  lcd.print(val*0.01);
+//
 //  Serial.println(IRoutput);
 //  Serial.print("My value: ");
 //  Serial.println(val*0.01);
   driveArcade(0.35, val*0.0005);
-  
-  
-  
-  
-  
-  
-  
 }
 
 void forward(){
@@ -144,4 +138,22 @@ void sweep(){
 //  }
 
 servo.write(0);
+}
+
+double getCandleHeight() {
+  int vals[180];
+  int min = 1023, temp;
+  float kStartHeight = 7.875;
+  float kLengthOfMount = 2.5;
+  float kDegreesRotation = 100;
+  int kTicks = 180;
+  float kStartAngle = 90;
+  for(int i = 0; i < kTicks; i++) {
+    servo.write(i);
+    temp = analogRead(kFrontFlame);
+    delay(20);
+    if(temp < min) min = temp;
+
+
+  }
 }

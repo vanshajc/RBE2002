@@ -3,17 +3,17 @@
  * Copyright (c) 2011 PJRC.COM, LLC - Paul Stoffregen <paul@pjrc.com>
  *
  * Version 1.0
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -63,6 +63,8 @@ typedef struct {
 	uint8_t                state;
 	int32_t                position;
 } Encoder_internal_state_t;
+
+double kConversionFactor = 0.001963495408494;
 
 class Encoder
 {
@@ -227,6 +229,10 @@ public:
 	inline void write(int32_t p) {
 		encoder.position = p;
 	}
+	inline double getInches() {
+		update(&encoder);
+		return encoder.position*kConversionFactor;
+	}
 #endif
 private:
 	Encoder_internal_state_t encoder;
@@ -236,7 +242,7 @@ private:
 public:
 	static Encoder_internal_state_t * interruptArgs[ENCODER_ARGLIST_SIZE];
 
-//                           _______         _______       
+//                           _______         _______
 //               Pin1 ______|       |_______|       |______ Pin1
 // negative <---         _______         _______         __      --> positive
 //               Pin2 __|       |_______|       |_______|   Pin2
