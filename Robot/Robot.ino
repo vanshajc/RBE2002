@@ -52,17 +52,22 @@ void loop() {
 //  Serial.println(re.read());
 //  Serial.print("IR Value: ");
 //  Serial.println(analogRead(frontIR));
+  //updateCoordinates();
   updateCoordinates();
-  if (millis() % 100 == 0)
+  if (millis() % 50 == 0){
+    
     displayCoordinates();
+  }
   followWall();
-
+  //driveArcade(.5, 0);
   //sweep();
 }
 
 Point getDistanceTraveled(){
   Point p;
-  double n = ((le.read() - prev.x) - (re.read() - prev.y))/(720*4.5) * 2.75 * 3.14;
+  Serial.print(le.read());
+  Serial.println(re.read());
+  double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95; 
   // incorporate angle here
   p.x = n;
   p.y = 0;
@@ -100,12 +105,7 @@ void followWall(){
   
   double val2 = analogRead(frontIR) - thresh;
   //Serial.println(val2);
-//  if (val2 > -280){
-//  drive(-128, 128);
-//  delay(500); 
-//  drive(0, 0);
-//   
-//  }
+  
   
   IRinput = analogRead(frontRightIR);
   IRPID.Compute();
@@ -113,18 +113,11 @@ void followWall(){
   
 //  lcd.setCursor(0,0);
 //  lcd.print(IRoutput);
-    lcd.setCursor(0, 1);
-    lcd.print(val);     
 //  
 //  Serial.println(IRoutput);
 //  Serial.print("My value: ");
 //  Serial.println(val*0.01);
   driveArcade(0.35, val*0.005);
-  
-  
-  
-  
-  
   
   
 }
