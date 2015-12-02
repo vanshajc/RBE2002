@@ -64,7 +64,6 @@ typedef struct {
 	int32_t                position;
 } Encoder_internal_state_t;
 
-double kConversionFactor = 0.001963495408494;
 
 class Encoder
 {

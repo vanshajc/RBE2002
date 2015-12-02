@@ -8,7 +8,7 @@
 #include "LiquidCrystal.h"
 #include <Servo.h>
 #include "Command.h"
-
+#include <Robot.h>
 
 Point current;
 Point prev;

@@ -1,10 +1,9 @@
-
+#include <stdlib.h>
 
 class Command{
 
 	public:
 		Command();
-		Command(String name);
 
 
 		virtual void execute();
