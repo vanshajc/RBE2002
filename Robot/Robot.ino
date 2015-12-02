@@ -7,6 +7,7 @@
 #include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
+#include "Command.h"
 
 
 Point current;
@@ -37,10 +38,7 @@ void setup() {
 
   IRsetpoint = 800;
   IRPID.SetMode(AUTOMATIC);
-  
-  
-  prev.x = 0;
-  prev.y = 0;
+
 }
 
 void loop() {
