@@ -3,16 +3,13 @@
 // Van is amazing
 //change from Morgan
 #include "pins.h"
-#include <Encoder.h>
+#include "Encoder/Encoder.h"
 #include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
-<<<<<<< HEAD
 #include "math.h"
-=======
 #include "Command.h"
 #include <Robot.h>
->>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
 
 Point current;
 Point prev;
@@ -57,7 +54,7 @@ void loop() {
   //updateCoordinates();
   updateCoordinates();
   if (millis() % 50 == 0){
-    
+
     displayCoordinates();
   }
   followWall();
@@ -69,13 +66,13 @@ Point getDistanceTraveled(){
   Point p;
   Serial.print(le.read());
   Serial.println(re.read());
-  double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95; 
+  double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95;
   // incorporate angle here
   p.x = n;
   p.y = 0;
   prev.x = le.read();
   prev.y = re.read();
- return p; 
+ return p;
 }
 
 void updateCoordinates(){
@@ -91,13 +88,13 @@ void displayCoordinates(){
   Serial.println(current.y);
   Serial.println("-----");
   sprintf(s, "X = %d, Y = %d", current.x, current.y);
-  
+
   lcd.print("X = ");
   lcd.print(current.x);
   //lcd.setCursor(0, 1);
   //lcd.print("Y = ");
   //lcd.print(current.y);
-  
+
   Serial.println(s);
   //lcd.print(s);
 }
@@ -121,8 +118,8 @@ void followWall(){
 
 =======
   //Serial.println(val2);
-  
-  
+
+
 >>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
   IRinput = analogRead(frontRightIR);
   IRPID.Compute();
@@ -139,13 +136,13 @@ void followWall(){
 //  Serial.println(val*0.01);
   driveArcade(0.35, val*0.0005);
 =======
-//  
+//
 //  Serial.println(IRoutput);
 //  Serial.print("My value: ");
 //  Serial.println(val*0.01);
   driveArcade(0.35, val*0.005);
-  
-  
+
+
 >>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
 }
 
@@ -206,19 +203,30 @@ servo.write(0);
 }
 
 double getCandleHeight() {
-  int vals[180];
-  int min = 1023, temp;
-  float kStartHeight = 7.875;
-  float kLengthOfMount = 2.5;
-  float kDegreesRotation = 100;
+  int minVal = 1023, temp1, temp2 = 0;
+  double kYOffset = 7.875;
+  double kXOffset = 2.5;
+  double kDegreesRotation = radians(100);
   int kTicks = 180;
-  float kStartAngle = 90;
+  double kStartAngle = radians(90);
+  //determine the index of the servo when it points
+  //at the candle
   for(int i = 0; i < kTicks; i++) {
     servo.write(i);
-    temp = analogRead(kFrontFlame);
+    temp1 = analogRead(kFrontFlame);
+    Serial.print(i);
+    Serial.print("\t");
+    Serial.println(temp1);
     delay(20);
-    if(temp < min) min = temp;
-
-
+    if(temp1 < minVal) {
+      temp2 = i;
+      minVal = temp1;
+    }
   }
+  servo.write(temp2);
+  //remap the value and add the offsets
+  double kSensorAngle = map(temp2, 0, kTicks -1, radians(0), radians(kDegreesRotation));
+  double kSensorYOffset = sin(kSensorAngle);
+  double kSensorXOffset = cos(kSensorAngle);
+  return kSensorYOffset+kYOffset;
 }

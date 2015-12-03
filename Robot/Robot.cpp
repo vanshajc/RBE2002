@@ -33,13 +33,13 @@ Point Robot::getDistanceTraveled(){
   Point p;
   //Serial.print(le.read());
   //Serial.println(re.read());
-  //double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95; 
+  //double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95;
   // incorporate angle here
   p.x = 0;
   p.y = 0;
   //prev.x = le.read();
   //prev.y = re.read();
- return p; 
+ return p;
 }
 
 void Robot::updateCoordinates(){
@@ -55,25 +55,25 @@ void Robot::displayCoordinates(){
   // Serial.println(current.y);
   // Serial.println("-----");
   // sprintf(s, "X = %d, Y = %d", current.x, current.y);
-  
+
   // lcd.print("X = ");
   // lcd.print(current.x);
   //lcd.setCursor(0, 1);
   //lcd.print("Y = ");
   //lcd.print(current.y);
-  
+
   //Serial.println(s);
   //lcd.print(s);
 }
 
 void Robot::followWall(){
   double val = analogRead(frontRightIR) - thresh; // read ir value
-  
+
   double val2 = analogRead(frontIR) - thresh;
 //  Serial.println(val*0.01);
   driveArcade(0.35, val*0.005);
-  
-  
+
+
 }
 
 void Robot::forward(){
@@ -114,4 +114,38 @@ void Robot::drive(int left, int right){
     analogWrite(rightMotor1, right);
     analogWrite(rightMotor2, 0);
   }
+}
+/**
+
+* Get the height of the candle from a predetermined distance
+* @return height of candle
+*/
+double Robot::getCandleHeight(){
+  int minVal = 1023, temp1, temp2 = 0;
+  double kYOffset = 7.875;
+  double kXOffset = 2.5;
+  double kDegreesRotation = radians(100);
+  int kTicks = 180;
+  double kStartAngle = radians(90);
+  //determine the index of the servo when it points
+  //at the candle
+  for(int i = 0; i < kTicks; i++) {
+    servo.write(i);
+    temp1 = analogRead(kFrontFlame);
+    Serial.print(i);
+    Serial.print("\t");
+    Serial.println(temp1);
+    delay(20);
+    if(temp1 < minVal) {
+      temp2 = i;
+      minVal = temp1;
+    }
+  }
+  servo.write(temp2);
+  //remap the value and add the offsets
+  double kSensorAngle = map(temp2, 0, kTicks -1, radians(0), radians(kDegreesRotation));
+  double kSensorYOffset = sin(kSensorAngle);
+  double kSensorXOffset = cos(kSensorAngle);
+
+  return kSensorYOffset+kYOffset;
 }

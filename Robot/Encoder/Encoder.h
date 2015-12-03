@@ -224,17 +224,8 @@ public:
 		update(&encoder);
 		return encoder.position;
 	}
-	inline double getInches() {
-		update(&encoder);
-		return encoder.position*kConversionFactor;
-	}
 	inline void write(int32_t p) {
 		encoder.position = p;
-	}
-	inline double getInches() {
-		update(&encoder);
-		return encoder.position*kConversionFactor;
-		//test
 	}
 #endif
 private:
