@@ -103,7 +103,6 @@ void followWall(){
   double val = analogRead(frontRightIR) - thresh; // read ir value
 
   double val2 = analogRead(frontIR) - thresh;
-<<<<<<< HEAD
   Serial.println(val2);
   lcd.setCursor(0,1);
   lcd.print(val2);
@@ -116,34 +115,7 @@ void followWall(){
 
   }
 
-=======
-  //Serial.println(val2);
-
-
->>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
-  IRinput = analogRead(frontRightIR);
-  IRPID.Compute();
-  //driveArcade(0.5, IRoutput);
-
-//  lcd.setCursor(0,0);
-//  lcd.print(IRoutput);
-<<<<<<< HEAD
-//  lcd.setCursor(0, 1);
-//  lcd.print(val*0.01);
-//
-//  Serial.println(IRoutput);
-//  Serial.print("My value: ");
-//  Serial.println(val*0.01);
   driveArcade(0.35, val*0.0005);
-=======
-//
-//  Serial.println(IRoutput);
-//  Serial.print("My value: ");
-//  Serial.println(val*0.01);
-  driveArcade(0.35, val*0.005);
-
-
->>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
 }
 
 void forward(){

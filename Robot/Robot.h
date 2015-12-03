@@ -18,6 +18,7 @@ class Robot{
 		void drive(int left, int right);
 		Point current;
 		Point prev;
+		double getCandleHeight();
 
 		int thresh;
 		int initialDifference;
