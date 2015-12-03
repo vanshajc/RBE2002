@@ -7,9 +7,15 @@
 #include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
+<<<<<<< HEAD
 #include "math.h"
+=======
+#include "Command.h"
+#include <Robot.h>
+>>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
 
-
+Point current;
+Point prev;
 
 int thresh = 450;
 int initialDifference = 0;
@@ -36,6 +42,7 @@ void setup() {
 
   IRsetpoint = 800;
   IRPID.SetMode(AUTOMATIC);
+
 }
 
 void loop() {
@@ -47,16 +54,59 @@ void loop() {
 //  Serial.println(re.read());
 //  Serial.print("IR Value: ");
 //  Serial.println(analogRead(frontIR));
+  //updateCoordinates();
+  updateCoordinates();
+  if (millis() % 50 == 0){
+    
+    displayCoordinates();
+  }
   followWall();
-
+  //driveArcade(.5, 0);
   //sweep();
 }
 
+Point getDistanceTraveled(){
+  Point p;
+  Serial.print(le.read());
+  Serial.println(re.read());
+  double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95; 
+  // incorporate angle here
+  p.x = n;
+  p.y = 0;
+  prev.x = le.read();
+  prev.y = re.read();
+ return p; 
+}
+
+void updateCoordinates(){
+  Point p = getDistanceTraveled();
+  current.x += p.x;
+  current.y += p.y;
+}
+
+void displayCoordinates(){
+  lcd.setCursor(0, 0);
+  char s[16];
+  Serial.println(current.x);
+  Serial.println(current.y);
+  Serial.println("-----");
+  sprintf(s, "X = %d, Y = %d", current.x, current.y);
+  
+  lcd.print("X = ");
+  lcd.print(current.x);
+  //lcd.setCursor(0, 1);
+  //lcd.print("Y = ");
+  //lcd.print(current.y);
+  
+  Serial.println(s);
+  //lcd.print(s);
+}
 
 void followWall(){
   double val = analogRead(frontRightIR) - thresh; // read ir value
 
   double val2 = analogRead(frontIR) - thresh;
+<<<<<<< HEAD
   Serial.println(val2);
   lcd.setCursor(0,1);
   lcd.print(val2);
@@ -69,12 +119,18 @@ void followWall(){
 
   }
 
+=======
+  //Serial.println(val2);
+  
+  
+>>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
   IRinput = analogRead(frontRightIR);
   IRPID.Compute();
   //driveArcade(0.5, IRoutput);
 
 //  lcd.setCursor(0,0);
 //  lcd.print(IRoutput);
+<<<<<<< HEAD
 //  lcd.setCursor(0, 1);
 //  lcd.print(val*0.01);
 //
@@ -82,6 +138,15 @@ void followWall(){
 //  Serial.print("My value: ");
 //  Serial.println(val*0.01);
   driveArcade(0.35, val*0.0005);
+=======
+//  
+//  Serial.println(IRoutput);
+//  Serial.print("My value: ");
+//  Serial.println(val*0.01);
+  driveArcade(0.35, val*0.005);
+  
+  
+>>>>>>> f3382f62aee9b5e515ae61caaef8db2b42778928
 }
 
 void forward(){

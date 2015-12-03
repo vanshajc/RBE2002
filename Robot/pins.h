@@ -1,12 +1,11 @@
 #ifndef pins_h
 #define pins_h
 
-#define leftMotor1 1//10
-#define rightMotor1 2//9
+#define leftMotor1 8
+#define rightMotor1 11
 
-#define leftMotor2 3
-#define rightMotor2 4
-
+#define leftMotor2 9
+#define rightMotor2 10
 
 #define leftEncoder1 2
 #define leftEncoder2 3
@@ -17,6 +16,10 @@
 #define backIR 2
 #define frontIR 2
 
+typedef struct {
+ double x;
+ double y;
+} Point;
 
 enum DigitalInputs {
   kLeftMotorA = 10,
