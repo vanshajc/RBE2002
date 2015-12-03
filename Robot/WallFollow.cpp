@@ -9,5 +9,3 @@ bool WallFollow::isFinished(){
 
 	return true;
 }
-
-

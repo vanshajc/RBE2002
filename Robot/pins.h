@@ -35,7 +35,10 @@ enum DigitalInputs {
 enum AnalogInputs {
   kFrontIR = 2,
   kBackIR = 3,
-  kFrontFlame = 12
+  kFrontFlame = 12,
+  kTopFlame = 11,
+  kMiddleFlame = 10,
+  kLowFlame = 9
 };
 
 #define stopPin 24
