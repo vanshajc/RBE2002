@@ -12,14 +12,23 @@
  //Encoder re(rightEncoder1, rightEncoder2);
 
 // Servo servo;
+Robot* Robot::robot = NULL;
 
-Robot::Robot(){
-	//thresh = 450;
-	//initialDifference = 0;
-	//le(leftEncoder1, leftEncoder2);
-	//re(rightEncoder1, rightEncoder2);
-	//lcd(40, 41, 42, 43, 44, 45);
+Robot::Robot(){}
+
+Robot::getInstance(){
+  if(robot == NULL) robot = new Robot();
+  return robot;
 }
+
+Robot::initializeSubsystems(){
+
+}
+//thresh = 450;
+//initialDifference = 0;
+//le(leftEncoder1, leftEncoder2);
+//re(rightEncoder1, rightEncoder2);
+//lcd(40, 41, 42, 43, 44, 45);
 
 void Robot::setup(){
 

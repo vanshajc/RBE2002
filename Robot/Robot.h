@@ -6,10 +6,11 @@
 #include "L3G.h"
 #include "Wire.h"
 class Robot{
-
+	static Robot *robot;
 
 	public:
-		Robot();
+		static Robot* getInstance();
+		void initializeSubsystems();
 		void setup();
 		Point getDistanceTraveled();
 		void updateCoordinates();
@@ -27,6 +28,9 @@ class Robot{
 		void turnAtWall();
 		int thresh;
 		int initialDifference;
+
+	private:
+		Robot();//cant be invoked
 
 		Servo servo;
 		L3G gyro;

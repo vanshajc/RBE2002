@@ -7,4 +7,6 @@ class CheckFlame : public Command{
 
 		void execute();
 		bool isFinished();
+	private:
+		Robot* robot;
 };
