@@ -10,11 +10,21 @@
 #define leftEncoder1 2
 #define leftEncoder2 3
 #define rightEncoder1 19
-#define rightEncoder2 20
+#define rightEncoder2 18
 
 #define frontRightIR 3
 #define backIR 2
 #define frontIR 2
+
+#define sideFlameTop 1
+#define sideFlameMid 1
+#define sideFlameBot 1
+#define frontFlame 8
+
+#define flameThreshold 100
+#define flameDetect 300
+
+#define fan 11
 
 typedef struct {
  double x;
@@ -43,7 +53,6 @@ enum AnalogInputs {
 
 #define stopPin 24
 #define servoPin 4
-#define fan 5
 
 
 #endif
