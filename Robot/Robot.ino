@@ -1,15 +1,16 @@
-// Robot.ino
+  // Robot.ino
 // This is the main file.
 // Van is amazing
 //change from Morgan
 #include "pins.h"
-#include "Encoder/Encoder.h"
+#include "Robot.h"
+#include "Encoder.h"
 #include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
 #include "math.h"
 #include "Command.h"
-#include <Robot.h>
+
 
 Point current;
 Point prev;
@@ -39,7 +40,6 @@ void setup() {
 
   IRsetpoint = 800;
   IRPID.SetMode(AUTOMATIC);
-
 }
 
 void loop() {

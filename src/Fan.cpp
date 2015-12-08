@@ -1,13 +1,13 @@
 #include "Robot.h"
 #include "Fan.h"
 
-Fan::Fan(int servoPin, int flameSensorPin, int fanPin):servoPin(SERVO_PIN){}
+Fan::Fan(){}
 
 void Fan::initialize() {
-  servo.attach(SERVO_PIN);
+  servo.attach(kServoPin);
 }
 
-int Fan::sweep(){
+double Fan::sweep(){
   int minVal = 1023, temp1, temp2 = 0;
   double kYOffset = 7.875;
   double kXOffset = 2.5;
@@ -18,7 +18,7 @@ int Fan::sweep(){
   //at the candle
   for(int i = 0; i < kTicks; i++) {
     servo.write(i);
-    temp1 = analogRead(flameSensorPin);
+    temp1 = analogRead(kFrontFlame);
     delay(20);
     if(temp1 < minVal) {
       temp2 = i;
@@ -35,5 +35,9 @@ int Fan::sweep(){
 }
 
 void Fan::setFan(int speed) {
-  analogWrite(fanPin, speed);
+  analogWrite(kFanPin, speed);
+}
+
+int Fan::getFlameSensor(){
+  return analogRead(kFrontFlame);
 }
