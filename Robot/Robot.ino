@@ -1,20 +1,8 @@
-  // Robot.ino
-// This is the main file.
-// Van is amazing
-//change from Morgan
 #include "pins.h"
-<<<<<<< HEAD
-#include "Robot.h"
-=======
->>>>>>> 23ab2ba64750b1dff80da62cfebe087ec307b258
 #include "Encoder.h"
 #include "PID_v1.h"
 #include "LiquidCrystal.h"
 #include <Servo.h>
-<<<<<<< HEAD
-#include "math.h"
-#include "Command.h"
-=======
 #include <Wire.h>
 #include <L3G.h>
 //#include "IMU.h"
@@ -29,22 +17,36 @@ float gyro_zold; //gyro cummulative z value
 float gerrx; // Gyro x error
 float gerry; // Gyro y error
 float gerrz; // Gyro 7 error
->>>>>>> 23ab2ba64750b1dff80da62cfebe087ec307b258
 
-
+int dir = 90;
 Point current;
 Point prev;
+double z;
+
+
 //IMU imu;
 typedef enum {
   wallFollowState,
+  findCandleState,
   turnToCandleState,
   driveToCandleState,
   blowCandleState,
   END
-} State;
+} 
+State;
 
-int thresh = 450;
+typedef enum {
+    wallFollowDefault,
+    driveAtOutsideCorner,
+    turnAtOutsideCorner,
+    driveToEndOfCorner,
+    turnAtInsideCorner
+} WallFollowState;
+WallFollowState wState;
+
+int thresh = 500; // 450
 int initialDifference = 0;
+int initialDirection = 0;
 
 Encoder le(leftEncoder1, leftEncoder2);
 Encoder re(rightEncoder1, rightEncoder2);
@@ -71,91 +73,99 @@ void setup() {
   drive(0, 0);
   delay(500);
   IRPID.SetMode(AUTOMATIC);
-<<<<<<< HEAD
-=======
   analogWrite(fan, LOW);
   calibrate();
-  servo.write(160);
+  servo.write(100);
 
->>>>>>> 23ab2ba64750b1dff80da62cfebe087ec307b258
 }
 
 void loop() {
   //if (digitalRead(stopPin) == LOW)
-    //kill();
-//  Serial.print("Left encoder: ");
-//  Serial.print(le.read());
-//  Serial.print(" Right encoder: ");
-//  Serial.println(re.read());
-//  Serial.print("IR Value: ");
-//  Serial.println(analogRead(frontIR));
+  //kill();
   //updateCoordinates();
+  initialDirection = gyro_z;
   updateCoordinates();
-  if (millis() % 50 == 0){
+  if (millis() % 5 == 0){
 
     displayCoordinates();
   }
-  //Serial.print("Value of flame sensor: ");
-  Serial.print("Flame: ");
-  Serial.println(analogRead(frontFlame));
   //turnLeft();
-  runStateMachine();
-  //runStateMachine();
-  //analogWrite(fan, 128);
-  //drive(-200, 75);
   //delay(1000);
+  runStateMachine();
+  //Serial.println(analogRead(backRightIR));
 }
+long leftEncPosition;
+long rightEncPosition;
+int maxFlame = 0;
+long initialLeftPosition;
+long initialRightPosition;
+
 void runStateMachine(){
   switch(state){
-    case wallFollowState: followWall(); 
-      if (hasDetectedFlame()){
-        state = turnToCandleState;
-        drive(0, 0);
-        delay(1000);
-      }
-      break;
-    case turnToCandleState: 
-      drive(-180, 95);
-      Serial.println(analogRead(frontFlame));
-      if (abs(analogRead(frontFlame)) < 800){
-        drive(0, 0);
-        delay(1000);
-        state = driveToCandleState;
-      }
-      break;
-    case driveToCandleState:
-      //driveArcade(0.7, 0);
-      drive(128, 138);
-      if (abs(analogRead(frontIR) - 300) < 10){
-        drive(0, 0);
-        state = blowCandleState;
-      }
-      break;
-    case blowCandleState:
-      getCandleHeight();
-      analogWrite(fan, 255);
-      state = END;
-      break;
-    case END:
+  case wallFollowState: 
+    followWall(); 
+    if (hasDetectedFlame()){
+      state = findCandleState;
+      initialLeftPosition = le.read();
+      initialRightPosition = re.read();
       drive(0, 0);
-      break;
+      delay(1000);
+    }
+    break;
+  case findCandleState:
+    if (abs(le.read() + re.read() - initialLeftPosition - initialRightPosition) < 8500){
+      drive(-128, 128);
+      if (analogRead(frontFlame) > maxFlame){
+      leftEncPosition = le.read();
+      rightEncPosition = re.read();
+      maxFlame = analogRead(frontFlame);
+      }
+    }
+    else{
+      drive(0, 0);
+      state = turnToCandleState;
+    }
+    break;
+  case turnToCandleState: 
+    
+    if (abs(le.read() - leftEncPosition) >= 50 && abs(re.read() - rightEncPosition) >= 50){
+      drive(128, -128);
+    }else{
+      drive(0, 0);
+      resetEncoders();
+      //delay(10000);
+      state = driveToCandleState;
+    }
+    break;
+  case driveToCandleState:
+    //driveArcade(0.7, 0);
+    forward();
+    if (analogRead(frontIR) > 300){
+      drive(0, 0);
+      state = blowCandleState;
+    }
+    break;
+  case blowCandleState:
+    z = getCandleHeight();
+    analogWrite(fan, 255);
+    state = END;
+    break;
+  case END:
+    drive(0, 0);
+    break;
   }
 }
-
-
-  //driveArcade(.5, 0);
-  //sweep();
-
 
 Point getDistanceTraveled(){
   Point p;
   double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95;
   // incorporate angle here
-  p.x = n;
-  p.y = 0;
+  double angle = (le.read() + re.read())*90/4250.0;
+  p.x = n*cos(angle*3.14/180);
+  p.y = n*sin(angle*3.14/180);
   prev.x = le.read();
   prev.y = re.read();
- return p;
+  return p;
 }
 
 void updateCoordinates(){
@@ -166,53 +176,127 @@ void updateCoordinates(){
 
 void displayCoordinates(){
   lcd.setCursor(0, 0);
-  char s[16];
-  // Serial.println(current.x);
-  // Serial.println(current.y);
-  // Serial.println("-----");
-  // sprintf(s, "X = %d, Y = %d", current.x, current.y);
-
   lcd.print("X = ");
-  lcd.print(current.x);
-  //lcd.setCursor(0, 1);
-  //lcd.print("Y = ");
-  //lcd.print(current.y);
+  lcd.print((int)current.x);
+  lcd.print(" Y = ");
+  lcd.print((int)current.y);
+  lcd.setCursor(0, 1);
+  lcd.print("Z = ");
+  lcd.print(z);
 
   //lcd.print(s);
 }
 
+// void followWall(){
+//   double val = kP*(analogRead(frontRightIR) - thresh); // read ir value
+//   IRinput = analogRead(frontRightIR);
+//   double val2 = analogRead(frontIR);
+
+//   if (analogRead(frontRightIR) < 100 && analogRead(backRightIR) < 100){
+    
+//     initialDifference = le.read() + re.read();
+//     lcd.setCursor(0, 0);
+//     lcd.print("Turning Right");
+//     turnRight();
+//     long t = millis();
+//     initialDifference = le.read() + re.read();
+//     while (millis() - t < 1600){
+//       lcd.setCursor(0, 0);
+//       lcd.print("Forward");
+//       forward();
+//     }
+//     drive(0, 0);
+//     return;
+//   }
+//   initialDifference = le.read() + re.read();
+//   if (analogRead(frontRightIR) < 100){
+//     lcd.setCursor(0, 0);
+//     lcd.print("Forward");
+//     forward();
+//     return;
+//   }
+//   if (val2 > 200){
+//     drive(0, 0);
+//     turnLeft();
+//   }
+//   //val = constrain(val, -0.5, 0.5);
+//   driveArcade(0.50, val);
+// }
+long currLeft, currRight;
+long t;
 void followWall(){
-  double val = kP*(analogRead(frontRightIR) - thresh); // read ir value
-  IRinput = analogRead(frontRightIR);
-  double val2 = analogRead(frontIR) - thresh;
-  //Serial.println(val2);
-  if (analogRead(frontRightIR) < 100){
-   //drive(255, 0);
-   drive(220, 150);
-   delay(100);
-   return;
-   
+  double val = kP*(analogRead(frontRightIR) - thresh);
+  double val2 = analogRead(frontIR);
+  switch(wState){
+    case wallFollowDefault:
+      if (analogRead(frontRightIR) < 100){
+        resetEncoders();
+        wState = driveAtOutsideCorner;
+      }
+      else if (val2 > 200){
+        currLeft = le.read();
+        currRight = re.read();
+        wState = turnAtInsideCorner;
+      }
+      driveArcade(0.5, val);
+      break;
+    case driveAtOutsideCorner:
+      forward();
+      if (analogRead(frontRightIR < 100) && analogRead(backRightIR) < 100){
+        currLeft = le.read();
+        currRight = re.read();
+        wState = turnAtOutsideCorner;
+      }
+      break;
+    case turnAtOutsideCorner:
+      if (abs(currLeft + currRight - le.read() - re.read()) < 3550){
+        drive(128, -128);
+      }
+      else{
+        resetEncoders();
+        currLeft = le.read();
+        currRight = re.read();
+        t = millis();
+        wState = driveToEndOfCorner;
+      }
+      break;
+    case driveToEndOfCorner:
+      forward();
+      if (millis() - t > 1500){
+        currLeft = le.read();
+        currRight = re.read();
+        if (analogRead(frontRightIR) > 200){
+          wState = wallFollowDefault;
+        }
+        else 
+          wState = turnAtOutsideCorner;
+      }
+      break;
+    case turnAtInsideCorner:
+      if (abs(currLeft + currRight - le.read() - re.read()) < 4250){
+        drive(-128, 128);
+      }
+      else{
+        resetEncoders();
+        currLeft = le.read();
+        currRight = re.read();
+        wState = wallFollowDefault;
+      }
+
   }
-  
-  if (val2 > -200){
-    drive(0, 0);
-    turnLeft();
-  }
-  IRPID.Compute();
-  lcd.print(val);
-  driveArcade(0.55, val);
 }
+
 
 void forward(){
   double turnRate = (le.read() + re.read() - initialDifference)*0.015;
-  driveArcade(1, turnRate);
+  driveArcade(0.6, turnRate);
 }
 
 /**
-* Drive the robot.
-* @param forwardSpeed the speed of the motors for forward (-1 to 1)
-* @param turnRate the rate for which the robot needs to turn (-1 to 1)
-*/
+ * Drive the robot.
+ * @param forwardSpeed the speed of the motors for forward (-1 to 1)
+ * @param turnRate the rate for which the robot needs to turn (-1 to 1)
+ */
 void driveArcade(double forwardSpeed, double turnRate){
   int leftSpeed = constrain(255*forwardSpeed - 255*turnRate, -255, 255);
   int rightSpeed = constrain(255*forwardSpeed + 255*turnRate, -255, 255);
@@ -221,10 +305,10 @@ void driveArcade(double forwardSpeed, double turnRate){
 }
 
 /**
-* Drive the two motors to the given speeds (-255 to 255).
-* @param left the duty cycle sent to the left motor
-* @param right the duty cycle sent to the right motor
-*/
+ * Drive the two motors to the given speeds (-255 to 255).
+ * @param left the duty cycle sent to the left motor
+ * @param right the duty cycle sent to the right motor
+ */
 void drive(int left, int right){
   if (left < 0){
     analogWrite(leftMotor2,-1*left);
@@ -246,55 +330,45 @@ void drive(int left, int right){
 }
 
 void kill(){
- drive(0, 0);
- exit(0);
-}
-
-void sweep(){
-//  for (int i = 90; i<180; i+=10){
-//    servo.write(i);
-//    analogWrite(fan, 255);
-//    delay(100);
-//  }
-
-servo.write(0);
+  drive(0, 0);
+  exit(0);
 }
 
 double getCandleHeight() {
-  int minVal = 1023, temp1, temp2 = 0;
+  int minVal = 0, temp1, temp2 = 0;
   double kYOffset = 7.875;
-  double kXOffset = 2.5;
+  double kXOffset = 10;
   double kDegreesRotation = radians(100);
   int kTicks = 180;
   double kStartAngle = radians(90);
   //determine the index of the servo when it points
-  //at the candle
+  //at the cand
   for(int i = 0; i < kTicks; i++) {
     servo.write(i);
-    temp1 = analogRead(kFrontFlame);
+
     Serial.print(i);
     Serial.print("\t");
     Serial.println(temp1);
     delay(20);
-    if(temp1 < minVal) {
+    temp1 = analogRead(frontFlame);
+    if(temp1 > minVal) {
       temp2 = i;
       minVal = temp1;
     }
   }
   servo.write(temp2);
   //remap the value and add the offsets
-  double kSensorAngle = map(temp2, 0, kTicks -1, radians(0), radians(kDegreesRotation));
-  double kSensorYOffset = sin(kSensorAngle);
+  double kSensorAngle = map(temp2, 0, kTicks -1, radians(45), radians(-15));
+  double kSensorYOffset = tan(kSensorAngle)*kXOffset;
   double kSensorXOffset = cos(kSensorAngle);
-  return kSensorYOffset+kYOffset;
+  return kSensorAngle*180/3.14;
 }
 
 int prevValue = 0;
 boolean hasDetectedFlame(){
-Serial.println(analogRead(sideFlameTop) - prevValue);
-  if (analogRead(sideFlameTop) > flameThreshold ||
-      analogRead(sideFlameMid) > flameThreshold ||
-      analogRead(sideFlameBot) > flameThreshold){
+  if (analogRead(sideFlameTop) > flameDetect ||
+    analogRead(sideFlameMid) > flameDetect ||
+    analogRead(sideFlameBot) > flameDetect){
 
     if (analogRead(sideFlameTop) > prevValue)
       prevValue = analogRead(sideFlameTop);
@@ -307,29 +381,27 @@ Serial.println(analogRead(sideFlameTop) - prevValue);
   return false;
 }
 
-int dir = 90;
+
 void turnLeft(){
   //calibrate();
-  while (abs(gyro_z - dir) > 1){
-//    Serial.print("Gyro value: ");
-//    Serial.print(gyro_x);
-//    Serial.print(", ");
-//    Serial.print(gyro_y);
-//    Serial.print(", ");
-//    Serial.println(gyro_z);
-    drive(-128, 128);
-    //delay(5);
-    //drive(0, 0);
+  Serial.println("Turning");
+  int currLeft = le.read();
+  int currRight = re.read();
+  initialDirection+=90;
+  //while (abs(gyro_z - initialDirection) > 5){
+  while(abs(currLeft + currRight - le.read() - re.read()) < 4250){
     calculate();
- }
- dir +=90;
-    Serial.print("Gyro value: ");
-    Serial.print(gyro_x);
-    Serial.print(", ");
-    Serial.print(gyro_y);
-    Serial.print(", ");
-    Serial.println(gyro_z);
- drive(0, 0);
+    //driveArcade(0.5, -1*((gyro_z - initialDirection))/90.0 * 0.5);
+    //driveArcade(0, -1*(4250 - currLeft + currRight - le.read() - re.read())/4250.0 *0.5);
+    //delay(5);
+    drive(-128, 128);
+    //drive(0, 0);
+
+  }
+  prev.x = le.read();
+  prev.y = re.read();
+  initialDifference = le.read() + re.read();
+  drive(0, 0);
 }
 
 
@@ -340,7 +412,7 @@ long timer1=0;
 
 float G_gain=.00875; // gyros gain factor for 250deg/sec
 void calibrate(){
- 
+
   Wire.begin(); // i2c begin
   if (!gyro.init()) // gyro init
   {
@@ -350,67 +422,83 @@ void calibrate(){
   timer=millis(); // init timer for first reading
   gyro.enableDefault(); // gyro init. default 250/deg/s
   delay(1000); // allow time for gyro to settle
-  
+
   for(int i =0;i<100;i++){  // takes 100 samples of the gyro
-  gyro.read();
-  gerrx+=gyro.g.x;
-  gerry+=gyro.g.y;
-  gerrz+=gyro.g.z;
-   delay(25);
+    gyro.read();
+    gerrx+=gyro.g.x;
+    gerry+=gyro.g.y;
+    gerrz+=gyro.g.z;
+    delay(25);
   }
- 
+
   gerrx = gerrx/100; // average reading to obtain an error/offset
   gerry = gerry/100;
   gerrz = gerrz/100;
 
-//  Serial.println(gerrx); // print error vals
-//  Serial.println(gerry);  
-//  Serial.println(gerrz);
+  //  Serial.println(gerrx); // print error vals
+  //  Serial.println(gerry);  
+  //  Serial.println(gerrz);
 
 }
 
 
 void calculate(){
-if((millis()-timer)>=5)  // reads imu every 5ms
+  if((millis()-timer)>=5)  // reads imu every 5ms
   {
 
-  gyro.read(); // read gyro
-  timer=millis(); //reset timer
-  gyro_x=(float)(gyro.g.x-gerrx)*G_gain; // offset by error then multiply by gyro gain factor 
-  gyro_y=(float)(gyro.g.y-gerry)*G_gain;
-  gyro_z=(float)(gyro.g.z-gerrz)*G_gain;
+    gyro.read(); // read gyro
+    timer=millis(); //reset timer
+    gyro_x=(float)(gyro.g.x-gerrx)*G_gain; // offset by error then multiply by gyro gain factor 
+    gyro_y=(float)(gyro.g.y-gerry)*G_gain;
+    gyro_z=(float)(gyro.g.z-gerrz)*G_gain;
 
-  gyro_x = gyro_x*G_Dt; // Multiply the angular rate by the time interval
+    gyro_x = gyro_x*G_Dt; // Multiply the angular rate by the time interval
     gyro_y = gyro_y*G_Dt; 
-      gyro_z = gyro_z*G_Dt;
+    gyro_z = gyro_z*G_Dt;
 
-   gyro_x +=gyro_xold; // add the displacment(rotation) to the cumulative displacment
+    gyro_x +=gyro_xold; // add the displacment(rotation) to the cumulative displacment
     gyro_y += gyro_yold;
-      gyro_z += gyro_zold;
-        
+    gyro_z += gyro_zold;
+
     gyro_xold=gyro_x ; // Set the old gyro angle to the current gyro angle
-     gyro_yold=gyro_y ;
-     gyro_zold=gyro_z ;
-  
+    gyro_yold=gyro_y ;
+    gyro_zold=gyro_z ;
 
   }
-  
-  
-      if((millis()-timer1)>=1000)  // prints the gyro value once per second
+
+
+  if((millis()-timer1)>=1000)  // prints the gyro value once per second
   {
     timer1=millis();
-    
-  Serial.print("G ");
-  Serial.print("X: ");
+
+    Serial.print("G ");
+    Serial.print("X: ");
     Serial.print(gyro_x);
-  Serial.print(" Y: ");
-  Serial.print(gyro_y);
-  Serial.print(" Z: ");
-  Serial.println(gyro_z);
+    Serial.print(" Y: ");
+    Serial.print(gyro_y);
+    Serial.print(" Z: ");
+    Serial.println(gyro_z);
   }
 
 
 }
 
-set;
+void turnRight(){
+  int currLeft = le.read();
+  int currRight = re.read();
+
+  while (abs(currLeft + currRight - le.read() - re.read()) < 4250){
+    //driveArcade(0, -1*(4250 - currLeft + currRight - le.read() - re.read())/2250.0);
+    drive(128, -128);
+  }
+  initialDifference = le.read() + re.read();
+  drive(0, 0);
 }
+
+void resetEncoders(){
+  initialDifference = le.read() + re.read();
+
+}
+
+
+
