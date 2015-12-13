@@ -13,18 +13,18 @@
 #define rightEncoder2 18
 
 #define frontRightIR 3
-#define backIR 2
-#define frontIR 2
+#define backRightIR 9
+#define frontIR 0
 
 #define sideFlameTop 1
 #define sideFlameMid 1
 #define sideFlameBot 1
-#define frontFlame 8
+#define frontFlame 6
 
 #define flameThreshold 100
-#define flameDetect 300
+#define flameDetect 200
 
-#define fan 11
+#define fan 6
 
 typedef struct {
  double x;
@@ -45,7 +45,7 @@ enum DigitalInputs {
 enum AnalogInputs {
   kFrontIR = 2,
   kBackIR = 3,
-  kFrontFlame = 12,
+  kFrontFlame = 6,
   kTopFlame = 11,
   kMiddleFlame = 10,
   kLowFlame = 9

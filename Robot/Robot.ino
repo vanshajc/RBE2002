@@ -24,13 +24,21 @@ Point prev;
 double z;
 
 
+long currLeft, currRight;
+long t;
+
 //IMU imu;
 typedef enum {
   wallFollowState,
   findCandleState,
   turnToCandleState,
   driveToCandleState,
+  turnRightToScan,
+  turnLittleState,
   blowCandleState,
+  turnRightToHome,
+  goForwardToWall,
+  wallFollowHome,
   END
 } 
 State;
@@ -73,10 +81,12 @@ void setup() {
   drive(0, 0);
   delay(500);
   IRPID.SetMode(AUTOMATIC);
-  analogWrite(fan, LOW);
-  calibrate();
+  analogWrite(fan, 0);
+  //calibrate();
   servo.write(100);
 
+
+  //state = blowCandleState;
 }
 
 void loop() {
@@ -91,6 +101,7 @@ void loop() {
   }
   //turnLeft();
   //delay(1000);
+
   runStateMachine();
   //Serial.println(analogRead(backRightIR));
 }
@@ -114,7 +125,7 @@ void runStateMachine(){
     break;
   case findCandleState:
     if (abs(le.read() + re.read() - initialLeftPosition - initialRightPosition) < 8500){
-      drive(-128, 128);
+      drive(-100, 100);
       if (analogRead(frontFlame) > maxFlame){
       leftEncPosition = le.read();
       rightEncPosition = re.read();
@@ -128,9 +139,20 @@ void runStateMachine(){
     break;
   case turnToCandleState: 
     
-    if (abs(le.read() - leftEncPosition) >= 50 && abs(re.read() - rightEncPosition) >= 50){
-      drive(128, -128);
+    if (abs(le.read() - leftEncPosition) >= 10 && abs(re.read() - rightEncPosition) >= 10){
+      drive(100, -100);
     }else{
+      currLeft = le.read();
+      currRight = re.read();
+      state = turnLittleState;
+      
+    }
+    break;
+  case turnLittleState:
+    if (abs(currLeft + currRight - le.read() - re.read()) < 650){
+      drive(100, -100);
+    }
+    else{
       drive(0, 0);
       resetEncoders();
       //delay(10000);
@@ -139,17 +161,70 @@ void runStateMachine(){
     break;
   case driveToCandleState:
     //driveArcade(0.7, 0);
-    forward();
-    if (analogRead(frontIR) > 300){
+    if (le.read()  - leftEncPosition > 4000){
       drive(0, 0);
-      state = blowCandleState;
+      currLeft = le.read();
+      currRight = re.read();
+      state = turnRightToScan;
+    }
+    else{
+    forward();
+      if (analogRead(frontIR) > 300){
+        drive(0, 0);
+        z = getCandleHeight();
+        t = millis();
+        state = blowCandleState;
+      }
+    } 
+    break;
+  case turnRightToScan:
+    if (abs(currLeft + currRight - le.read() - re.read()) < 4250){
+        drive(128, -128);
+    }else{
+      drive(0, 0);
+      initialLeftPosition = le.read();
+      initialRightPosition = re.read();
+      state = findCandleState;
     }
     break;
   case blowCandleState:
-    z = getCandleHeight();
+    drive(0, 0);
     analogWrite(fan, 255);
-    state = END;
+    if (millis() - t > 10000){
+      analogWrite(fan, 0);
+      currLeft = le.read();
+      currRight = re.read();
+      state = turnRightToHome;
+    }
     break;
+
+  case turnRightToHome:
+    if (abs(currLeft + currRight - le.read() - re.read()) < 4250){
+      drive(100, -100);
+    }
+    else{
+      resetEncoders();
+      state = goForwardToWall;
+    }
+    break;
+
+  case goForwardToWall:
+    forward();
+    if (analogRead(frontIR) > 200){
+      state = wallFollowHome;
+    }
+  
+    break;
+  case wallFollowHome:
+    followWall();
+    if (current.x <= 10 && current.y <= 10){
+      drive(0, 0);
+      state = END;
+    }
+
+  break;
+
+
   case END:
     drive(0, 0);
     break;
@@ -222,8 +297,7 @@ void displayCoordinates(){
 //   //val = constrain(val, -0.5, 0.5);
 //   driveArcade(0.50, val);
 // }
-long currLeft, currRight;
-long t;
+
 void followWall(){
   double val = kP*(analogRead(frontRightIR) - thresh);
   double val2 = analogRead(frontIR);
@@ -335,11 +409,13 @@ void kill(){
 }
 
 double getCandleHeight() {
-  int minVal = 0, temp1, temp2 = 0;
+  double minVal = 0, temp1, temp2 = 0;
   double kYOffset = 7.875;
-  double kXOffset = 10;
+  double kXOffset = 6;
   double kDegreesRotation = radians(100);
   int kTicks = 180;
+  servo.write(0);
+  delay(1000);
   double kStartAngle = radians(90);
   //determine the index of the servo when it points
   //at the cand
@@ -358,10 +434,13 @@ double getCandleHeight() {
   }
   servo.write(temp2);
   //remap the value and add the offsets
-  double kSensorAngle = map(temp2, 0, kTicks -1, radians(45), radians(-15));
+  //double kSensorAngle = map(temp2, 0, kTicks -1, radians(135), radians(70)) - radians(90);
+  double kSensorAngle = radians((70 - temp2)/3);
+
   double kSensorYOffset = tan(kSensorAngle)*kXOffset;
   double kSensorXOffset = cos(kSensorAngle);
-  return kSensorAngle*180/3.14;
+  return kYOffset + kSensorYOffset;
+  //return kSensorAngle*180/3.14;
 }
 
 int prevValue = 0;
@@ -499,6 +578,5 @@ void resetEncoders(){
   initialDifference = le.read() + re.read();
 
 }
-
 
 
