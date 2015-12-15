@@ -25,6 +25,8 @@
 #define flameDetect 200
 
 #define fan 6
+#define stopPin 24
+#define servoPin 4
 
 typedef struct {
  double x;
@@ -51,8 +53,7 @@ enum AnalogInputs {
   kLowFlame = 9
 };
 
-#define stopPin 24
-#define servoPin 4
+
 
 
 #endif
