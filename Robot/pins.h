@@ -15,6 +15,7 @@
 #define frontRightIR 3
 #define backRightIR 9
 #define frontIR 0
+//#define frontSideIR 11
 
 #define sideFlameTop 1
 #define sideFlameMid 1
@@ -24,9 +25,10 @@
 #define flameThreshold 100
 #define flameDetect 200
 
-#define fan 6
+#define fan 29
 #define stopPin 24
 #define servoPin 4
+#define led 27
 
 typedef struct {
  double x;

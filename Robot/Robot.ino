@@ -79,12 +79,15 @@ int prevValue = 0;
 
 void setup() {
   resetEncoders();
+  pinMode(fan, OUTPUT);
+  pinMode(led, OUTPUT);
   Serial.begin(9600);
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
   servo.attach(servoPin);
   pinMode(stopPin, INPUT_PULLUP);
-  analogWrite(fan, 0);
+  digitalWrite(fan, LOW);
+  digitalWrite(led, LOW);
   drive(0, 0);
   delay(500);
   calibrate();
@@ -103,6 +106,8 @@ void loop() {
   if (millis() % 5 == 0 && display){
     displayCoordinates();
   }
+  //followWall();
+  //digitalWrite(fan, HIGH);
   runStateMachine();
   //analogWrite(fan, 255);
 }
@@ -118,6 +123,7 @@ void runStateMachine(){
     followWall(); 
     if (hasDetectedFlame()){
       state = findCandleState;
+      digitalWrite(led, HIGH);
       initialLeftPosition = le.read();
       initialRightPosition = re.read();
       drive(0, 0);
@@ -125,7 +131,11 @@ void runStateMachine(){
     }
     break;
   case findCandleState:
-    if (abs(le.read() + re.read() - initialLeftPosition - initialRightPosition) < 8500){
+    if (analogRead(frontIR) > 400){
+      drive(0, 0);
+      state = driveToCandleState;
+    }
+    else if (abs(le.read() + re.read() - initialLeftPosition - initialRightPosition) < 8500){
       drive(-100, 100);
       if (analogRead(frontFlame) > maxFlame){
       leftEncPosition = le.read();
@@ -142,9 +152,11 @@ void runStateMachine(){
     if (abs(le.read() - leftEncPosition) >= 10 && abs(re.read() - rightEncPosition) >= 10){
       drive(100, -100);
     }else{
+      resetEncoders();
       currLeft = le.read();
       currRight = re.read();
       state = turnLittleState;
+      //state = driveToCandleState;
     }
     break;
   case turnLittleState:
@@ -160,27 +172,30 @@ void runStateMachine(){
     break;
   case driveToCandleState:
    //driveArcade(0.7, 0);
-     if (analogRead(frontIR) > 200){
+     if (analogRead(frontIR) > 250){
         drive(0, 0);
         z = getCandleHeight();
         t = millis();
+        display = false;
+        double newX = current.x - 4*cos(radians(gyro_z));
+        double newY = current.y - 4*sin(radians(gyro_z));
+        displayActualCoordinates(newX, newY);
+        // lcd.setCursor(0, 1);
+        // lcd.print("X = ");
+        // lcd.print(newX);
+        // lcd.print(" Y = ");
+        // lcd.print(newY);
         state = blowCandleState;
       }
-    if (le.read()  - leftEncPosition > 4000){
+    else if (le.read()  - leftEncPosition > 4000){
       drive(0, 0);
-      //updateCoordinates();
+      resetEncoders();
       currLeft = le.read();
       currRight = re.read();
       state = turnRightToScan;
     }
     else{
-    forward();
-      if (analogRead(frontIR) > 200){
-        drive(0, 0);
-        z = getCandleHeight();
-        t = millis();
-        state = blowCandleState;
-      }
+      forward();
     } 
     break;
   case turnRightToScan:
@@ -195,17 +210,14 @@ void runStateMachine(){
     break;
   case blowCandleState:
     drive(0, 0);
-    analogWrite(fan, 255);
-    if (millis() - t > 10000 && analogRead(frontFlame) > 900){
-      analogWrite(fan, 0);
-      display = false;
-      double newX = current.x + 6*cos(radians(gyro_z));
-      double newY = current.y + 6*sin(radians(gyro_z));
-      displayActualCoordinates(newX, newY);
+    digitalWrite(fan, HIGH);
+    if (millis() - t > 15000 && analogRead(frontFlame) < 100){
+      digitalWrite(fan, LOW);
+      digitalWrite(led, LOW);
       resetEncoders();
       currLeft = le.read();
       currRight = re.read();
-      state = turnRightToHome;
+      state = END;
     }
     break;
 
@@ -221,7 +233,7 @@ void runStateMachine(){
 
   case goForwardToWall:
     forward();
-    if (analogRead(frontIR) > 200 || analogRead(frontRightIR) > 200){
+    if (analogRead(frontIR) > 200){
       drive(0, 0);
       state = wallFollowHome;
     }
@@ -229,7 +241,7 @@ void runStateMachine(){
     break;
   case wallFollowHome:
     followWall();
-    if (current.x <= 10 && current.y <= 10){
+    if (abs(current.x) <= 10 && abs(current.y) <= 10){
       drive(0, 0);
       state = END;
     }
@@ -244,9 +256,9 @@ Point getDistanceTraveled(){
   Point p;
   double n = ((le.read() - prev.x) - (re.read() - prev.y))/(3200*2) * 8.95;
   // incorporate angle here
-  double angle = (le.read() + re.read())*90/4250.0;
-  p.x = n*cos(angle*3.14/180);
-  p.y = n*sin(angle*3.14/180);
+  double angle = (le.read() + re.read())*90/410.0; // 90/4250
+  p.x = n*cos(radians(angle));
+  p.y = n*sin(radians(angle));
   prev.x = le.read();
   prev.y = re.read();
   return p;
@@ -269,7 +281,7 @@ void displayActualCoordinates(int x, int y){
   lcd.print("X = ");
   lcd.print((int) x);
   lcd.print(" Y = ");
-  lcd.print((int) y);
+  lcd.print((int) -1*y);
   lcd.setCursor(0, 1);
   lcd.print("Z = ");
   lcd.print(z);
@@ -305,7 +317,7 @@ void followWall(){
       break;
     case turnAtOutsideCorner:
       if (abs(currLeft + currRight - le.read() - re.read()) < 3750){
-        drive(128, -128);
+        drive(158, -158);
       }
       else{
         //updateCoordinates();
@@ -318,7 +330,7 @@ void followWall(){
       break;
     case driveToEndOfCorner:
       forward();
-      if (millis() - t > 1700){
+      if (millis() - t > 1800){
         //updateCoordinates();
         resetEncoders();
         currLeft = le.read();
@@ -446,7 +458,7 @@ boolean hasDetectedFlame(){
     if (analogRead(sideFlameTop) > prevValue)
       prevValue = analogRead(sideFlameTop);
 
-    if (analogRead(sideFlameTop) - prevValue <= -50)
+    if (analogRead(sideFlameTop) - prevValue <= -10)
       return true;
 
   }
@@ -548,5 +560,4 @@ void calculate(){
 void resetEncoders(){
   initialDifference = le.read() + re.read();
 }
-
 
